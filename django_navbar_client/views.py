@@ -10,7 +10,7 @@ from urllib3 import PoolManager
 from json import loads
 
 import logging
-from oauth_client.models import AuthProfile
+from django_navbar_client.models import AuthProfile
 
 
 PM = PoolManager()
@@ -67,7 +67,7 @@ def oauth_login(request):
     login_url = "{0}o/authorize/?client_id={1}&response_type=code&redirect_uri=http://{2}{3}".format(
             settings.OAUTH_SERVER_URL,
             settings.OAUTH_CLIENT_ID,
-            request.META['HTTP_HOST'], reverse("oauth_client:callback"))
+            request.META['HTTP_HOST'], reverse("django_navbar_client:callback"))
     logging.debug("Redirect Oauth to %s", login_url)
     return redirect(login_url)
 
@@ -93,7 +93,7 @@ def oauth_callback(request, **kwargs):
     # Prepare request data
     url = settings.OAUTH_SERVER_URL + "o/token/"
     code = request.GET["code"]
-    call_back_url = "http://" + request.META['HTTP_HOST']+reverse('oauth_client:callback')
+    call_back_url = "http://" + request.META['HTTP_HOST']+reverse('django_navbar_client:callback')
     fields = {
         "grant_type": "authorization_code",
         "client_id": settings.OAUTH_CLIENT_ID,

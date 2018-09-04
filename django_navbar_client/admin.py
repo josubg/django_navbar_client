@@ -1,5 +1,5 @@
 from django.contrib import admin
-from oauth_client.models import AuthProfile
+from django_navbar_client.models import AuthProfile
 # Register your models here.
 
 

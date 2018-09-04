@@ -1,7 +1,7 @@
 from django.contrib.auth import login
 from django.contrib.auth.models import User
 from logging import getLogger
-from oauth_client.models import AuthProfile
+from django_navbar_client.models import AuthProfile
 
 logger = getLogger(__name__)
 
