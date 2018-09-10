@@ -63,11 +63,14 @@ def oauth_logout(request, **kwargs):
 
 
 def oauth_login(request):
+    protocol = "https"
     logger.info("Redirect to login")
-    login_url = "{0}o/authorize/?client_id={1}&response_type=code&redirect_uri=http://{2}{3}".format(
+    login_url = "{0}o/authorize/?client_id={1}&response_type=code&redirect_uri={2}://{3}{4}".format(
             settings.OAUTH_SERVER_URL,
             settings.OAUTH_CLIENT_ID,
-            request.META['HTTP_HOST'], reverse("django_navbar_client:callback"))
+            protocol,
+            request.META['HTTP_HOST'],
+            reverse("django_navbar_client:callback"))
     logging.debug("Redirect Oauth to %s", login_url)
     return redirect(login_url)
 
@@ -80,20 +83,25 @@ def oauth_navbar(request):
     logger.info("Ask navbar for %s at %s", request.user, request.session.session_key)
     if request.user.is_authenticated:
         auth_profile = request.user.authprofile
-
         remote_response = ask_oauth(url, auth_profile.token)
     else:
         remote_response = ask_oauth(url, None)
+    if remote_response.status != 200:
+        logger.error("Auth server returned an error(%s):\n  %s\n heads:\n  %s  ",
+                     remote_response.status,
+                     remote_response.data.decode('utf-8'),
+                     remote_response.getheaders(),)
     return HttpResponse(content=remote_response.data, status=remote_response.status)
 
 
 def oauth_callback(request, **kwargs):
+    protocol = "https"
     logger.info("A Login callback received")
     logger.debug("data %s", request.GET)
     # Prepare request data
     url = settings.OAUTH_SERVER_URL + "o/token/"
     code = request.GET["code"]
-    call_back_url = "http://" + request.META['HTTP_HOST']+reverse('django_navbar_client:callback')
+    call_back_url = protocol + "://" + request.META['HTTP_HOST']+reverse('django_navbar_client:callback')
     fields = {
         "grant_type": "authorization_code",
         "client_id": settings.OAUTH_CLIENT_ID,
