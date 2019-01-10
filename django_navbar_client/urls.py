@@ -8,5 +8,5 @@ urlpatterns = [
     path('api/login_callback/', oauth_callback, name="callback"),
     path('view/logout/', oauth_logout, name="logout"),
     path('view/login/', oauth_login, name="logout"),
-    path('widget/navbar/', oauth_navbar, name="navbar"),
+    path('api/navbar/', oauth_navbar, name="navbar"),
 ]
