@@ -164,5 +164,6 @@ def ask_oauth(url, token, refesh=None):
         headers = {"Authorization": token}
         logger.debug("\tHEADERS   : %s", headers)
     logger.debug("\tURL         : %s", url)
-    response = PM.request(method='get', url=url, headers=headers)
+    print(not settings.DEBUG)
+    response = PM.request(method='get', url=url, headers=headers, verify=not settings.DEBUG)
     return response
