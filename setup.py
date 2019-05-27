@@ -20,17 +20,17 @@ setup(
     version='0.9.50',
     description='Easy remote oauth identification', 
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),  
-    install_requires=['django'],
+    install_requires=['django', "request"],
 
     keywords='Fiware Orion development', 
     long_description=long_description, 
     long_description_content_type='text/markdown',  
-    url='https://github.com/deusto-tech/django-oauth-client/', 
+    url='https://github.com/josubg/django_navbar_client',
     author='Josu Bermudez', 
     author_email='josu.bermudez@deusto.es',  
     project_urls={ 
-        'Bug Reports': 'https://github.com/deusto-tech/django-oauth-client//issues',
-        'Source': 'https://github.com/deusto-tech/django-oauth-client',
+        'Bug Reports': 'https://github.com/josubg/django_navbar_client/issues',
+        'Source': 'https://github.com/josubg/django_navbar_client',
     },
 
     classifiers=[  
