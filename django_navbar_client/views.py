@@ -5,15 +5,14 @@ from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.conf import settings
+import requests
 
-from urllib3 import PoolManager
-from json import loads
 
 import logging
 from django_navbar_client.models import AuthProfile
 
 
-PM = PoolManager()
+# PM = PoolManager()
 
 logger = logging.getLogger(__name__)
 
@@ -31,32 +30,34 @@ def oauth_logout(request, **kwargs):
 
     url = settings.OAUTH_SERVER_URL + "o/revoke_token/"
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    body = "token={}&client_id={}&client_secret={}".format(
+    data = "token={}&client_id={}&client_secret={}".format(
         oauth_profile.token,
         settings.OAUTH_CLIENT_ID,
         settings.OAUTH_CLIENT_SECRET
     )
 
-    r = PM.request(method='POST', url=url, headers=headers, body=body)
-    if r.status == 200:
+    # r = PM.request(method='POST', url=url, headers=headers, body=body)
+    r = requests.post(url=url, headers=headers, data=data)
+    if r.status_code == 200:
         logger.info("OAUTH token revoked server")
     else:
-        logger.warning("OAuth Logout failed: %i", r.status)
+        logger.warning("OAuth Logout failed: %i", r.status_code)
         logger.warning("\tURL: %s", url)
         logger.warning("\tHEADERS: %s", headers)
-        logger.warning("\tBODY: %s", body)
-        logger.debug(r.data)
+        logger.warning("\tBODY: %s", data)
+        logger.debug(r.json())
 
     url = settings.OAUTH_SERVER_URL + "api/logout/"
     headers = {"Authorization": oauth_profile.token}
-    r = PM.request(method='GET', url=url, headers=headers)
-    if r.status == 200:
+    # r = PM.request(method='GET', url=url, headers=headers)
+    r = request.get(url=url, headers=headers)
+    if r.status_code == 200:
         logger.info("Logged out in OAUTH server")
     else:
-        logger.warning("OAuth Logout failed: %i", r.status)
+        logger.warning("OAuth Logout failed: %i", r.status_code)
         logger.warning("\tURL: %s", url)
         logger.warning("\tHEADERS: %s", headers)
-        logger.debug(r.data)
+        logger.debug(r.json())
     logout(request)
     logger.info("Logged out in local server")
     return redirect(kwargs.get("next", reverse('home')))
@@ -82,16 +83,16 @@ def oauth_navbar(request):
         caller)
     logger.info("Ask navbar for %s at %s", request.user, request.session.session_key)
     if request.user.is_authenticated:
-        auth_profile = request.user.authprofile
+        auth_profile, created = AuthProfile.objects.get_or_create(user=request.user)
         remote_response = ask_oauth(url, auth_profile.token)
     else:
         remote_response = ask_oauth(url, None)
-    if remote_response.status != 200:
+    if remote_response.status_code != 200:
         logger.error("Auth server returned an error(%s):\n  %s\n heads:\n  %s  ",
-                     remote_response.status,
-                     remote_response.data.decode('utf-8'),
-                     remote_response.getheaders(),)
-    return HttpResponse(content=remote_response.data, status=remote_response.status)
+                     remote_response.status_code,
+                     remote_response.json(),
+                     remote_response.headers,)
+    return HttpResponse(content=remote_response.text, status=remote_response.status_code)
 
 
 def oauth_callback(request, **kwargs):
@@ -111,19 +112,19 @@ def oauth_callback(request, **kwargs):
     }
     logger.info("Asking Auth server for the Token")
 
-    r = PM.request(method='post', url=url, fields=fields)
-    if r.status == 200:
+    r = request.post(method='post', url=url, data=fields)
+    if r.status_code == 200:
         logger.debug("\tURL: %s", url)
         logger.debug("\tFIELDS: %s", fields)
-        logger.debug("Response Obtained \n\t Data: %s", r.data)
-        data = loads(r.data.decode('utf-8'))
+        logger.debug("Response Obtained \n\t Data: %s", r.json())
+        data = r.json()
         access_token = data["token_type"] + " " + data["access_token"]
         logger.info("Asking Auth server for ME")
         url = settings.OAUTH_SERVER_URL + "api/me"
         r = ask_oauth(url, token=access_token)
-        if r.status == 200:
-            logger.debug("Response Obtained \n\t Data: %s", r.data)
-            me = loads(r.data.decode('utf-8'))
+        if r.status_code == 200:
+            logger.debug("Response Obtained \n\t Data: %s", r.json())
+            me = r.json()
             try:
                 user = User.objects.get_by_natural_key(me["user"])
             except ObjectDoesNotExist:
@@ -145,16 +146,16 @@ def oauth_callback(request, **kwargs):
             logger.debug("Logged as s% in session %s ", request.user.id, request.session.session_key)
             return redirect(kwargs.get("next", reverse('home')))
         else:
-            logger.warning("Something went wrong asking ME: %i", r.status)
+            logger.warning("Something went wrong asking ME: %i", r.status_code)
             logger.warning("\tURL: %s", url)
-            logger.debug(r.data)
+            logger.debug(r.json())
     else:
-        logger.warning("Something went wrong asking token: %i", r.status)
+        logger.warning("Something went wrong asking token: %i", r.status_code)
         logger.warning("\tURL: %s", url)
         logger.warning("\tFIELDS: %s", fields)
-        logger.debug(r.data)
+        logger.debug(r.json())
     logger.info("Unsuccessful login")
-    response = HttpResponse(content=r.data, status=r.status)
+    response = HttpResponse(content=r.json(), status=r.status_code)
     return response
 
 
@@ -165,5 +166,5 @@ def ask_oauth(url, token, refesh=None):
         logger.debug("\tHEADERS   : %s", headers)
     logger.debug("\tURL         : %s", url)
     print(not settings.DEBUG)
-    response = PM.request(method='get', url=url, headers=headers, verify=not settings.DEBUG)
+    response = requests.get(url=url, headers=headers, verify=not settings.DEBUG)
     return response
