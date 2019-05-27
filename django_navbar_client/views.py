@@ -131,6 +131,9 @@ def oauth_callback(request, **kwargs):
                 logger.info("Local user created for %s", me["user"])
                 user = User.objects.create_user(username=me["user"])
             try:
+                if me.get("level", "unknown") == "admin":
+                    user.is_staff = True
+                    user.is_superuser = True
                 user.authprofile.token = access_token
                 logger.debug("Set profile token=%s", access_token)
                 user.authprofile.uuid = me["uuid"]
