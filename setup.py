@@ -17,10 +17,10 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='django_navbar_client',  
-    version='0.9.50',
+    version='0.9.56',
     description='Easy remote oauth identification', 
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),  
-    install_requires=['django', "request"],
+    install_requires=['django', "request", 'requests'],
 
     keywords='Fiware Orion development', 
     long_description=long_description, 

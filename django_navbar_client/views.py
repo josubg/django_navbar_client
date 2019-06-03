@@ -5,14 +5,10 @@ from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.conf import settings
-import requests
-
-
-import logging
 from django_navbar_client.models import AuthProfile
+import requests
+import logging
 
-
-# PM = PoolManager()
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +32,6 @@ def oauth_logout(request, **kwargs):
         settings.OAUTH_CLIENT_SECRET
     )
 
-    # r = PM.request(method='POST', url=url, headers=headers, body=body)
     r = requests.post(url=url, headers=headers, data=data)
     if r.status_code == 200:
         logger.info("OAUTH token revoked server")
@@ -50,7 +45,7 @@ def oauth_logout(request, **kwargs):
     url = settings.OAUTH_SERVER_URL + "api/logout/"
     headers = {"Authorization": oauth_profile.token}
     # r = PM.request(method='GET', url=url, headers=headers)
-    r = request.get(url=url, headers=headers)
+    r = requests.get(url=url, headers=headers)
     if r.status_code == 200:
         logger.info("Logged out in OAUTH server")
     else:
@@ -78,7 +73,7 @@ def oauth_login(request):
 
 def oauth_navbar(request):
     caller = request.GET.get("caller")
-    url = "{0}view/navbar/?caller={1}".format(
+    url = "{0}view/fullnav/?caller={1}".format(
         settings.OAUTH_SERVER_URL,
         caller)
     logger.info("Ask navbar for %s at %s", request.user, request.session.session_key)
@@ -90,7 +85,7 @@ def oauth_navbar(request):
     if remote_response.status_code != 200:
         logger.error("Auth server returned an error(%s):\n  %s\n heads:\n  %s  ",
                      remote_response.status_code,
-                     remote_response.json(),
+                     remote_response.text,
                      remote_response.headers,)
     return HttpResponse(content=remote_response.text, status=remote_response.status_code)
 
@@ -112,7 +107,7 @@ def oauth_callback(request, **kwargs):
     }
     logger.info("Asking Auth server for the Token")
 
-    r = request.post(method='post', url=url, data=fields)
+    r = requests.post(url=url, data=fields)
     if r.status_code == 200:
         logger.debug("\tURL: %s", url)
         logger.debug("\tFIELDS: %s", fields)
