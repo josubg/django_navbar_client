@@ -67,6 +67,9 @@ def oauth_login(request):
             protocol,
             request.META['HTTP_HOST'],
             reverse("django_navbar_client:callback"))
+    status = request.GET.get("status", False)
+    if status:
+        login_url += "&status=" + status
     logging.debug("Redirect Oauth to %s", login_url)
     return redirect(login_url)
 
