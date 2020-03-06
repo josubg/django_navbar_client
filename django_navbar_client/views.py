@@ -6,6 +6,8 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.conf import settings
 from django_navbar_client.models import AuthProfile
+from urllib.parse import urlencode
+
 import requests
 import logging
 
@@ -42,20 +44,28 @@ def oauth_logout(request, **kwargs):
         logger.warning("\tBODY: %s", data)
         logger.debug(r.json())
 
-    url = settings.OAUTH_SERVER_URL + "api/logout/"
-    headers = {"Authorization": oauth_profile.token}
-    # r = PM.request(method='GET', url=url, headers=headers)
-    r = requests.get(url=url, headers=headers)
-    if r.status_code == 200:
-        logger.info("Logged out in OAUTH server")
-    else:
-        logger.warning("OAuth Logout failed: %i", r.status_code)
-        logger.warning("\tURL: %s", url)
-        logger.warning("\tHEADERS: %s", headers)
-        logger.debug(r.json())
+    # url = settings.OAUTH_SERVER_URL + "view/logout/"
+    url = "{}accounts/logout/?{}".format(
+        settings.OAUTH_SERVER_URL,
+        urlencode({
+            "next": request.build_absolute_uri('home')
+           })
+    )
     logout(request)
-    logger.info("Logged out in local server")
-    return redirect(kwargs.get("next", reverse('home')))
+    return redirect(url)
+    # headers = {"Authorization": oauth_profile.token}
+    # # r = PM.request(method='GET', url=url, headers=headers)
+    # r = requests.get(url=url, headers=headers)
+    # if r.status_code == 200:
+    #     logger.info("Logged out in OAUTH server")
+    # else:
+    #     logger.error("OAuth Logout failed: %i", r.status_code)
+    #     logger.error("\tURL: %s", url)
+    #     logger.error("\tHEADERS: %s", headers)
+    #     logger.error(r.json())
+    # logout(request)
+    # logger.info("Logged out in local server")
+    # return redirect(kwargs.get("next", reverse('home')))
 
 
 def oauth_login(request):
@@ -89,7 +99,7 @@ def oauth_navbar(request):
         logger.error("Auth server returned an error(%s):\n  %s\n heads:\n  %s  ",
                      remote_response.status_code,
                      remote_response.text,
-                     remote_response.headers,)
+                     remote_response.headers)
     return HttpResponse(content=remote_response.text, status=remote_response.status_code)
 
 
