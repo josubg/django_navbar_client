@@ -42,9 +42,10 @@ def oauth_logout(request, **kwargs):
         logger.warning("\tBODY: %s", data)
         logger.debug(r.json())
 
-    url = settings.OAUTH_SERVER_URL + "api/logout/"
+    # url = settings.OAUTH_SERVER_URL + "view/logout/"
+    url = settings.OAUTH_SERVER_URL + "accounts/logout/"
     headers = {"Authorization": oauth_profile.token}
-    # r = PM.request(method='GET', url=url, headers=headers)
+    # # r = PM.request(method='GET', url=url, headers=headers)
     r = requests.get(url=url, headers=headers)
     if r.status_code == 200:
         logger.info("Logged out in OAUTH server")

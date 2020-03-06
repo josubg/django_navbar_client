@@ -17,7 +17,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='django_navbar_client',  
-    version='0.9.56',
+    version='1.0.0',
     description='Easy remote oauth identification', 
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),  
     install_requires=['django', "request", 'requests'],
